@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token
 from app.models.user import User
@@ -63,13 +64,6 @@ def login(
 
 
 @router.get("/me", response_model=UserResponse)
-def get_current_user_info(
-    db: Session = Depends(get_db),
-    # Временная заглушка — полная реализация в 03-03
-    token: str = Depends(lambda: ""),
-):
-    """Получить данные текущего пользователя. Полная защита в плане 03-03."""
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Auth dependency will be added in next plan",
-    )
+def get_me(current_user: User = Depends(get_current_user)):
+    """Получить данные текущего аутентифицированного пользователя."""
+    return current_user
