@@ -10,8 +10,8 @@ None
 
 ## Phases
 
-- [ ] **Phase 1: Foundation** — структура проекта, Docker, схема БД, окружение
-- [ ] **Phase 2: Data Pipeline** — импорт 30-го джуза, слова + переводы + аяты в PostgreSQL
+- [x] **Phase 1: Foundation** — структура проекта, Docker, схема БД, окружение
+- [x] **Phase 2: Data Pipeline** — импорт 30-го джуза, слова + переводы + аяты в PostgreSQL
 - [ ] **Phase 3: Authentication** — регистрация, вход, JWT, защищённые маршруты
 - [ ] **Phase 4: Flashcard Core** — SM-2 алгоритм, API карточек, сессия повторений
 - [ ] **Phase 5: Frontend** — React-приложение, RTL, интерфейс карточек и сессии
@@ -110,8 +110,8 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Not started | - |
-| 2. Data Pipeline | 0/3 | Not started | - |
+| 1. Foundation | 3/3 | Complete | 2026-03-16 |
+| 2. Data Pipeline | 3/3 | Complete | 2026-03-17 |
 | 3. Authentication | 0/3 | Not started | - |
 | 4. Flashcard Core | 0/4 | Not started | - |
 | 5. Frontend | 0/4 | Not started | - |
