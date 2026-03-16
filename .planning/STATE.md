@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 
 ## Current Position
 
-Phase: 2 of 7 (Data Pipeline) — Phase 2 complete
-Plan: 3 of 3 in current phase
-Status: Phase complete — ready for Phase 3 (Authentication)
-Last activity: 2026-03-17 — Completed 02-03-PLAN.md (Seed Script)
+Phase: 3 of 7 (Authentication)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-03-16 — Completed 03-01-PLAN.md (User model + security utils)
 
-Progress: ████░░░░░░ 27% (6/22 plans complete)
+Progress: █████░░░░░ 32% (7/22 plans complete)
 
 ## Plans Created
 
@@ -37,6 +37,7 @@ Progress: ████░░░░░░ 27% (6/22 plans complete)
 - **Arabic font**: Amiri via Google Fonts (supports harakat/diacritics)
 - **Test DB**: SQLite in-memory (not PostgreSQL) for test speed
 - **Auth**: JWT stored in localStorage, interceptor adds Bearer header
+- **bcrypt**: Use bcrypt directly (not passlib) — passlib 1.7.4 incompatible with bcrypt 5.x on Python 3.13
 - **Streak logic**: counts from today or yesterday, gap breaks streak
 - **Deploy**: Vercel (frontend) + Railway (backend + PostgreSQL)
 - **Proxy**: Vercel rewrites /api/* → Railway URL (no CORS issues)
@@ -51,6 +52,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-03-17
-Stopped at: Completed 02-03-PLAN.md — Phase 2 Data Pipeline complete
-Resume: Run /gsd:execute-plan on 03-01-PLAN.md to start Phase 3 (Authentication)
+Last session: 2026-03-16
+Stopped at: Completed 03-01-PLAN.md — User model + security utils, 8 tests GREEN
+Resume: Run /gsd:execute-plan on 03-02-PLAN.md (JWT endpoints: /register, /login, /me)

@@ -112,7 +112,7 @@ Plans:
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-03-16 |
 | 2. Data Pipeline | 3/3 | Complete | 2026-03-17 |
-| 3. Authentication | 0/3 | Not started | - |
+| 3. Authentication | 1/3 | In progress | - |
 | 4. Flashcard Core | 0/4 | Not started | - |
 | 5. Frontend | 0/4 | Not started | - |
 | 6. Progress & Stats | 0/3 | Not started | - |
