@@ -8,6 +8,7 @@ from app.core.database import get_db
 from app.api.v1.auth import router as auth_router
 from app.api.v1.cards import router as cards_router
 from app.api.v1.sessions import router as sessions_router
+from app.api.v1.stats import router as stats_router
 
 app = FastAPI(
     title="Quran Arabic Learner API",
@@ -27,6 +28,7 @@ app.add_middleware(
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(cards_router, prefix="/api/v1")
 app.include_router(sessions_router, prefix="/api/v1")
+app.include_router(stats_router, prefix="/api/v1")
 
 
 @app.get("/health")
