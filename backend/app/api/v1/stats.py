@@ -9,6 +9,7 @@ from app.models.user import User
 from app.models.word import Word
 from app.models.flashcard import UserCardProgress, CardReview, ReviewSession
 from app.schemas.stats import StatsSummary
+from app.core.streak import calculate_streak
 
 router = APIRouter(prefix="/stats", tags=["stats"])
 
@@ -55,6 +56,14 @@ def get_stats_summary(
 
     sessions_total = len(completed_sessions)
 
+    # Серия дней — дни когда были завершённые сессии
+    session_dates = [
+        s.completed_at.date()
+        for s in completed_sessions
+        if s.completed_at is not None
+    ]
+    current_streak = calculate_streak(session_dates)
+
     # Средняя точность по сессиям
     accuracy_overall = 0.0
     if sessions_total > 0:
@@ -69,6 +78,6 @@ def get_stats_summary(
         cards_due_today=cards_due_today,
         cards_today=cards_today,
         sessions_total=sessions_total,
-        current_streak=0,  # заполняется в 06-02
+        current_streak=current_streak,
         accuracy_overall=accuracy_overall,
     )
