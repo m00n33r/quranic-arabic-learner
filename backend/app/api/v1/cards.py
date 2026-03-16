@@ -11,24 +11,43 @@ from app.models.user import User
 from app.models.word import Word, WordOccurrence
 from app.models.ayah import Ayah
 from app.models.flashcard import UserCardProgress, CardReview, ReviewSession
-from app.schemas.flashcard import CardDue, ReviewRequest, CardReviewResponse
+from app.schemas.flashcard import CardDue, ReviewRequest, CardReviewResponse, AyahExample
 
 router = APIRouter(prefix="/cards", tags=["cards"])
 
-def get_word_translation(db: Session, word: Word) -> str | None:
-    """Берём перевод из первого аята, где встречается слово."""
+
+def get_word_data(db: Session, word: Word) -> tuple[list[str], list[AyahExample]]:
+    """
+    Вернуть (translations, examples) для слова.
+    translations: список значений из Word.translation_ru (разделены "; ")
+    examples: до 2 аятов с позицией слова
+    """
+    # Значения слова
     if word.translation_ru:
-        return word.translation_ru
-    occ = (
+        translations = [t.strip() for t in word.translation_ru.split(";") if t.strip()]
+    else:
+        translations = []
+
+    # Примеры аятов (до 2)
+    occs = (
         db.query(WordOccurrence)
         .filter(WordOccurrence.word_id == word.id)
-        .first()
+        .limit(2)
+        .all()
     )
-    if occ:
+    examples = []
+    for occ in occs:
         ayah = db.query(Ayah).filter(Ayah.id == occ.ayah_id).first()
         if ayah:
-            return ayah.russian_translation
-    return None
+            examples.append(AyahExample(
+                arabic_text=ayah.arabic_text,
+                russian_translation=ayah.russian_translation,
+                surah_number=ayah.surah_number,
+                ayah_number=ayah.ayah_number,
+                word_position=occ.position,
+            ))
+
+    return translations, examples
 
 
 # Начальные SM-2 параметры для новых карточек
@@ -71,17 +90,19 @@ def get_due_cards(
     for progress in due_progresses:
         word = db.query(Word).filter(Word.id == progress.word_id).first()
         if word:
+            translations, examples = get_word_data(db, word)
             result.append(CardDue(
                 word_id=word.id,
                 arabic=word.arabic,
                 arabic_clean=word.arabic_clean,
-                translation_ru=get_word_translation(db, word),
+                translations=translations,
                 frequency=word.frequency,
                 easiness_factor=progress.easiness_factor,
                 interval=progress.interval,
                 repetitions=progress.repetitions,
                 next_review_date=progress.next_review_date,
                 is_new=False,
+                examples=examples,
             ))
 
     # Если нужно больше — добавить новые слова (без прогресса)
@@ -101,17 +122,19 @@ def get_due_cards(
             .all()
         )
         for word in new_words:
+            translations, examples = get_word_data(db, word)
             result.append(CardDue(
                 word_id=word.id,
                 arabic=word.arabic,
                 arabic_clean=word.arabic_clean,
-                translation_ru=get_word_translation(db, word),
+                translations=translations,
                 frequency=word.frequency,
                 easiness_factor=DEFAULT_EF,
                 interval=DEFAULT_INTERVAL,
                 repetitions=DEFAULT_REPETITIONS,
                 next_review_date=today,
                 is_new=True,
+                examples=examples,
             ))
 
     return result

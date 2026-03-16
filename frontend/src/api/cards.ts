@@ -1,16 +1,25 @@
 import { apiClient } from './client'
 
+export interface AyahExample {
+  arabic_text: string
+  russian_translation: string | null
+  surah_number: number
+  ayah_number: number
+  word_position: number
+}
+
 export interface CardDue {
   word_id: number
   arabic: string
   arabic_clean: string
-  translation_ru: string | null
+  translations: string[]
   frequency: number
   easiness_factor: number
   interval: number
   repetitions: number
   next_review_date: string
   is_new: boolean
+  examples: AyahExample[]
 }
 
 export interface ReviewResponse {

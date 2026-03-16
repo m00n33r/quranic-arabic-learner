@@ -3,12 +3,21 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 
+class AyahExample(BaseModel):
+    """Пример аята для слова на обороте карточки."""
+    arabic_text: str
+    russian_translation: Optional[str]
+    surah_number: int
+    ayah_number: int
+    word_position: int             # позиция слова в arabic_text.split() (0-based)
+
+
 class CardDue(BaseModel):
     """Карточка для повторения сегодня."""
     word_id: int
     arabic: str                    # с огласовками
     arabic_clean: str              # без огласовок
-    translation_ru: Optional[str]
+    translations: list[str]        # несколько значений слова
     frequency: int                 # частота в 30-м джузе
 
     # SM-2 состояние (для отображения прогресса в UI)
@@ -17,6 +26,9 @@ class CardDue(BaseModel):
     repetitions: int
     next_review_date: date
     is_new: bool = False           # True если карточка ещё не изучалась
+
+    # Примеры употребления из аятов (до 2 штук)
+    examples: list[AyahExample] = []
 
     model_config = {"from_attributes": True}
 
