@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
 import StudyPage from './pages/StudyPage'
+import QuranReaderPage from './pages/QuranReaderPage'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
@@ -24,6 +25,7 @@ function AppRoutes() {
       <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" /> : <RegisterPage />} />
       <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
       <Route path="/study" element={<ProtectedRoute><StudyPage /></ProtectedRoute>} />
+      <Route path="/reader" element={<ProtectedRoute><QuranReaderPage /></ProtectedRoute>} />
       <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
     </Routes>
   )

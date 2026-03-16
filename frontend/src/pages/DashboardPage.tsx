@@ -69,6 +69,18 @@ export default function DashboardPage() {
           Добро пожаловать, {user?.username}!
         </h2>
 
+        {/* Кнопка "Читать Коран" */}
+        <button
+          onClick={() => navigate('/reader')}
+          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-6 rounded-xl flex items-center justify-between transition-colors mb-3"
+        >
+          <div>
+            <div className="text-lg">Читать Коран</div>
+            <div className="text-sm opacity-80">Таджвид + добавление слов</div>
+          </div>
+          <span className="text-2xl">📖</span>
+        </button>
+
         {/* Кнопка "Учиться" */}
         <div className="bg-emerald-600 rounded-2xl p-6 mb-6 text-white">
           <div className="flex items-center justify-between">
