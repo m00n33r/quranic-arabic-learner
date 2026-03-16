@@ -8,11 +8,28 @@ from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.core.sm2 import apply_sm2
 from app.models.user import User
-from app.models.word import Word
+from app.models.word import Word, WordOccurrence
+from app.models.ayah import Ayah
 from app.models.flashcard import UserCardProgress, CardReview, ReviewSession
 from app.schemas.flashcard import CardDue, ReviewRequest, CardReviewResponse
 
 router = APIRouter(prefix="/cards", tags=["cards"])
+
+def get_word_translation(db: Session, word: Word) -> str | None:
+    """Берём перевод из первого аята, где встречается слово."""
+    if word.translation_ru:
+        return word.translation_ru
+    occ = (
+        db.query(WordOccurrence)
+        .filter(WordOccurrence.word_id == word.id)
+        .first()
+    )
+    if occ:
+        ayah = db.query(Ayah).filter(Ayah.id == occ.ayah_id).first()
+        if ayah:
+            return ayah.russian_translation
+    return None
+
 
 # Начальные SM-2 параметры для новых карточек
 DEFAULT_EF = 2.5
@@ -58,7 +75,7 @@ def get_due_cards(
                 word_id=word.id,
                 arabic=word.arabic,
                 arabic_clean=word.arabic_clean,
-                translation_ru=word.translation_ru,
+                translation_ru=get_word_translation(db, word),
                 frequency=word.frequency,
                 easiness_factor=progress.easiness_factor,
                 interval=progress.interval,
@@ -88,7 +105,7 @@ def get_due_cards(
                 word_id=word.id,
                 arabic=word.arabic,
                 arabic_clean=word.arabic_clean,
-                translation_ru=word.translation_ru,
+                translation_ru=get_word_translation(db, word),
                 frequency=word.frequency,
                 easiness_factor=DEFAULT_EF,
                 interval=DEFAULT_INTERVAL,
