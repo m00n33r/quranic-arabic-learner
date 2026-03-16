@@ -1,15 +1,18 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import DashboardPage from './pages/DashboardPage'
 
-// Placeholder компоненты (заменим в следующих планах)
-const LoginPage = () => <div className="p-8 text-center">Login Page (coming soon)</div>
-const RegisterPage = () => <div className="p-8 text-center">Register Page (coming soon)</div>
-const DashboardPage = () => <div className="p-8 text-center">Dashboard (coming soon)</div>
-const StudyPage = () => <div className="p-8 text-center">Study (coming soon)</div>
+const StudyPage = () => <div className="p-8 text-center">Study (coming in plan 05-04)</div>
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth()
-  if (isLoading) return <div className="flex items-center justify-center h-screen">Загрузка...</div>
+  if (isLoading) return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="text-emerald-600 text-lg">Загрузка...</div>
+    </div>
+  )
   if (!isAuthenticated) return <Navigate to="/login" replace />
   return <>{children}</>
 }
