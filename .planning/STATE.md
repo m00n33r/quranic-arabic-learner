@@ -9,49 +9,48 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 
 ## Current Position
 
-Phase: 1 of 7 (Foundation)
-Plan: Not started
-Status: Ready to plan
-Last activity: 2026-03-16 — Roadmap created, 7 phases defined
+Phase: 5 of 7 (Frontend) — All phases PLANNED
+Plan: All PLAN.md files created (22 total)
+Status: Ready to execute — start from Phase 1
+Last activity: 2026-03-16 — All 22 PLAN.md files created across all 7 phases
 
-Progress: ░░░░░░░░░░ 0%
+Progress: ██████████ 100% planning complete, 0% execution
 
-## Performance Metrics
+## Plans Created
 
-**Velocity:**
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: 0 hours
-
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| — | — | — | — |
-
-**Recent Trend:**
-- Last 5 plans: —
-- Trend: —
+| Phase | Plans | Status |
+|-------|-------|--------|
+| 1. Foundation | 01-01, 01-02, 01-03 | Planned ✓ |
+| 2. Data Pipeline | 02-01, 02-02, 02-03 | Planned ✓ |
+| 3. Authentication | 03-01, 03-02, 03-03 | Planned ✓ |
+| 4. Flashcard Core | 04-01, 04-02, 04-03, 04-04 | Planned ✓ |
+| 5. Frontend | 05-01, 05-02, 05-03, 05-04 | Planned ✓ |
+| 6. Progress & Stats | 06-01, 06-02, 06-03 | Planned ✓ |
+| 7. Deploy | 07-01, 07-02, 07-03 | Planned ✓ |
 
 ## Accumulated Context
 
-### Decisions
+### Key Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-(None yet)
+- **API**: alquran.cloud (GET /v1/juz/30/editions/quran-uthmani,ru.kuliev)
+- **SM-2 quality mapping**: user rates 1-4, mapped internally to SM-2 scale {1→1, 2→3, 3→4, 4→5}
+- **Arabic font**: Amiri via Google Fonts (supports harakat/diacritics)
+- **Test DB**: SQLite in-memory (not PostgreSQL) for test speed
+- **Auth**: JWT stored in localStorage, interceptor adds Bearer header
+- **Streak logic**: counts from today or yesterday, gap breaks streak
+- **Deploy**: Vercel (frontend) + Railway (backend + PostgreSQL)
+- **Proxy**: Vercel rewrites /api/* → Railway URL (no CORS issues)
 
 ### Deferred Issues
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-None yet.
+None.
 
 ## Session Continuity
 
 Last session: 2026-03-16
-Stopped at: Roadmap created, ready to plan Phase 1
-Resume file: None
+Stopped at: All 22 PLAN.md files created — ready to execute Phase 1
+Resume: Run /gsd:execute-plan on 01-01-PLAN.md to start
