@@ -5,7 +5,6 @@ import type { CardDue } from '../api/cards'
 import { sessionsApi } from '../api/sessions'
 import type { SessionComplete } from '../api/sessions'
 import FlashCard from '../components/FlashCard'
-import QualityButtons from '../components/QualityButtons'
 import ProgressBar from '../components/ProgressBar'
 
 type StudyState = 'loading' | 'studying' | 'completed' | 'empty' | 'error'
@@ -51,7 +50,7 @@ export default function StudyPage() {
     startSession()
   }, [startSession])
 
-  const handleQuality = async (quality: 1 | 2 | 3 | 4) => {
+  const handleQuality = useCallback(async (quality: 1 | 2 | 3 | 4) => {
     if (!sessionId || isReviewing) return
     setIsReviewing(true)
 
@@ -63,35 +62,46 @@ export default function StudyPage() {
       // продолжаем даже при ошибке review
     }
 
-    // Небольшая задержка перед переходом
-    setTimeout(async () => {
-      const nextIndex = currentIndex + 1
+    const nextIndex = currentIndex + 1
 
-      if (nextIndex >= cards.length) {
-        // Завершить сессию
-        try {
-          const res = await sessionsApi.completeSession(sessionId)
-          setSessionResult(res.data)
-        } catch {
-          // Показать локальные результаты если API упал
-          setSessionResult({
-            id: sessionId,
-            cards_reviewed: cards.length,
-            cards_correct: correctCount + (quality >= 2 ? 1 : 0),
-            accuracy: ((correctCount + (quality >= 2 ? 1 : 0)) / cards.length) * 100,
-            duration_seconds: 0,
-            completed_at: new Date().toISOString(),
-          })
-        }
-        setState('completed')
-      } else {
-        setCurrentIndex(nextIndex)
-        setIsFlipped(false)
+    if (nextIndex >= cards.length) {
+      // Завершить сессию
+      try {
+        const res = await sessionsApi.completeSession(sessionId)
+        setSessionResult(res.data)
+      } catch {
+        // Показать локальные результаты если API упал
+        setSessionResult({
+          id: sessionId,
+          cards_reviewed: cards.length,
+          cards_correct: correctCount + (quality >= 2 ? 1 : 0),
+          accuracy: ((correctCount + (quality >= 2 ? 1 : 0)) / cards.length) * 100,
+          duration_seconds: 0,
+          completed_at: new Date().toISOString(),
+        })
       }
+      setState('completed')
+    } else {
+      setCurrentIndex(nextIndex)
+      setIsFlipped(false)
+    }
 
-      setIsReviewing(false)
-    }, 300)
-  }
+    setIsReviewing(false)
+  }, [sessionId, isReviewing, cards, currentIndex, correctCount])
+
+  const handleSwipe = useCallback((direction: 'left' | 'right') => {
+    handleQuality(direction === 'right' ? 4 : 1)
+  }, [handleQuality])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (state !== 'studying' || isReviewing || !isFlipped) return
+      if (e.key === 'ArrowRight') handleSwipe('right')
+      if (e.key === 'ArrowLeft') handleSwipe('left')
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [state, isReviewing, isFlipped, handleSwipe])
 
   // Экран загрузки
   if (state === 'loading') {
@@ -230,18 +240,20 @@ export default function StudyPage() {
 
         {/* Карточка */}
         <FlashCard
+          key={currentCard.word_id}
           card={currentCard}
           onFlip={setIsFlipped}
+          onSwipe={handleSwipe}
         />
 
-        {/* Кнопки оценки */}
-        <QualityButtons
-          visible={isFlipped}
-          onSelect={handleQuality}
-          isLoading={isReviewing}
-        />
-
-        {/* Подсказка пока карточка не перевёрнута */}
+        {/* Подсказки */}
+        {isFlipped && (
+          <div className="flex justify-between text-sm text-gray-400 px-4">
+            <span>← Не знаю</span>
+            <span className="text-xs">или стрелки ← →</span>
+            <span>Знаю →</span>
+          </div>
+        )}
         {!isFlipped && (
           <p className="text-center text-gray-400 text-sm">
             Нажмите на карточку, чтобы увидеть перевод
