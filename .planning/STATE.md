@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-03-16)
 
 ## Current Position
 
-Phase: 3 of 7 (Authentication)
-Plan: 3 of 3 in current phase
-Status: Complete ✓
-Last activity: 2026-03-17 — Completed 03-03-PLAN.md (Auth deps + 11 integration tests)
+Phase: 5 of 7 (Frontend)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-03-17 — Completed 05-01-PLAN.md (Vite + React + Tailwind + Axios + AuthContext)
 
-Progress: ██████░░░░ 41% (9/22 plans complete)
+Progress: ████████░░ 45% (10/22 plans complete)
 
 ## Plans Created
 
@@ -41,6 +41,9 @@ Progress: ██████░░░░ 41% (9/22 plans complete)
 - **Streak logic**: counts from today or yesterday, gap breaks streak
 - **Deploy**: Vercel (frontend) + Railway (backend + PostgreSQL)
 - **Proxy**: Vercel rewrites /api/* → Railway URL (no CORS issues)
+- **Tailwind**: Use v3 (not v4) — v4 has no CLI binary, different config format
+- **verbatimModuleSyntax**: tsconfig.app.json enables it — always use `import type` for type-only imports in frontend
+- **Dev proxy**: vite.config.ts proxies /api/* → localhost:8000 (relative URLs in Axios, no CORS in dev)
 
 ### Deferred Issues
 
@@ -53,5 +56,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-17
-Stopped at: Completed 03-03-PLAN.md — Auth deps injection + 11 integration tests, 30 total tests GREEN
-Resume: Run /gsd:plan-phase 4 or /gsd:execute-plan on 04-01-PLAN.md (Flashcard Core)
+Stopped at: Completed 05-01-PLAN.md — Vite+React+TS, Tailwind v3, Axios JWT client, AuthContext, React Router v6
+Resume: Run /gsd:execute-plan on 05-02-PLAN.md (Auth pages: Login + Register UI)
