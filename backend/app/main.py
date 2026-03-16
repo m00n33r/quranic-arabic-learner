@@ -1,7 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.database import get_db
 
 app = FastAPI(
     title="Quran Arabic Learner API",
@@ -21,6 +24,12 @@ app.add_middleware(
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "environment": settings.environment}
+
+
+@app.get("/health/db")
+async def db_health(db: Session = Depends(get_db)):
+    db.execute(text("SELECT 1"))
+    return {"database": "ok"}
 
 
 @app.get("/")
