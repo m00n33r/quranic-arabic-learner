@@ -15,6 +15,9 @@ class Word(Base, TimestampMixin):
     translation_en = Column(Text)
     # Сколько раз слово встречается в 30-м джузе (для приоритизации)
     frequency = Column(Integer, default=1, nullable=False)
+    # Приближённый трёхбуквенный корень (консонантный скелет без слабых букв)
+    # Используется для кластеризации однокоренных слов
+    root_approx = Column(String(6), nullable=True, index=True)
 
     occurrences = relationship("WordOccurrence", back_populates="word")
 

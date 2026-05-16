@@ -12,6 +12,13 @@ class AyahExample(BaseModel):
     word_position: int             # позиция слова в arabic_text.split() (0-based)
 
 
+class KnownRootWord(BaseModel):
+    """Однокоренное слово, уже изученное пользователем."""
+    arabic: str
+    translation_ru: str
+    repetitions: int
+
+
 class CardDue(BaseModel):
     """Карточка для повторения сегодня."""
     word_id: int
@@ -29,6 +36,10 @@ class CardDue(BaseModel):
 
     # Примеры употребления из аятов (до 2 штук)
     examples: list[AyahExample] = []
+
+    # Корневая кластеризация (Вариант 2)
+    root_approx: Optional[str] = None          # приближённый корень
+    known_root_words: list[KnownRootWord] = [] # уже изученные слова того же корня
 
     model_config = {"from_attributes": True}
 

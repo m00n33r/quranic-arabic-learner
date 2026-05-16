@@ -15,7 +15,7 @@ from app.models.surah import Surah
 from app.models.ayah import Ayah
 from app.models.word import Word, WordOccurrence
 from app.data.fetcher import QuranFetcher, AyahData
-from app.utils.arabic import normalize_arabic, extract_words
+from app.utils.arabic import normalize_arabic, extract_words, extract_root_approx
 
 
 class DatabaseSeeder:
@@ -152,6 +152,7 @@ class DatabaseSeeder:
                 arabic=arabic_display,
                 arabic_clean=arabic_clean,
                 frequency=len(occurrences),
+                root_approx=extract_root_approx(arabic_clean) or None,
                 # translation_ru — будет добавлен позже (в Phase 4 или вручную)
             )
             self.db.add(word)

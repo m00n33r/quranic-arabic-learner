@@ -5,6 +5,9 @@ export interface SurahInfo {
   name_arabic: string
   name_english: string
   name_transliteration: string | null
+  name_russian: string | null
+  name_transliteration_ru: string | null
+  revelation_type: string | null
   total_ayahs: number
 }
 
@@ -12,6 +15,7 @@ export interface WordInAyah {
   word_id: number | null
   position: number
   arabic: string
+  translation_ru: string | null
   is_in_study: boolean
 }
 

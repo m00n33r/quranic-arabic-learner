@@ -8,6 +8,12 @@ export interface AyahExample {
   word_position: number
 }
 
+export interface KnownRootWord {
+  arabic: string
+  translation_ru: string
+  repetitions: number
+}
+
 export interface CardDue {
   word_id: number
   arabic: string
@@ -20,6 +26,9 @@ export interface CardDue {
   next_review_date: string
   is_new: boolean
   examples: AyahExample[]
+  // Корневая кластеризация
+  root_approx: string | null
+  known_root_words: KnownRootWord[]
 }
 
 export interface ReviewResponse {
@@ -33,8 +42,11 @@ export interface ReviewResponse {
 }
 
 export const cardsApi = {
-  getDueCards: (limit = 20) =>
-    apiClient.get<CardDue[]>(`/cards/due?limit=${limit}`),
+  getDueCards: (limit = 20, surahNumber?: number) => {
+    const params = new URLSearchParams({ limit: String(limit) })
+    if (surahNumber !== undefined) params.set('surah_number', String(surahNumber))
+    return apiClient.get<CardDue[]>(`/cards/due?${params}`)
+  },
 
   reviewCard: (wordId: number, quality: number, sessionId?: number) =>
     apiClient.post<ReviewResponse>(`/cards/${wordId}/review`, {

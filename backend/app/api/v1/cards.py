@@ -7,11 +7,12 @@ from sqlalchemy import and_, or_
 from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.core.sm2 import apply_sm2
+from app.core.smart_priority import score_new_words, cluster_by_root, get_known_root_words
 from app.models.user import User
 from app.models.word import Word, WordOccurrence
 from app.models.ayah import Ayah
 from app.models.flashcard import UserCardProgress, CardReview, ReviewSession
-from app.schemas.flashcard import CardDue, ReviewRequest, CardReviewResponse, AyahExample
+from app.schemas.flashcard import CardDue, ReviewRequest, CardReviewResponse, AyahExample, KnownRootWord
 
 router = APIRouter(prefix="/cards", tags=["cards"])
 
@@ -50,6 +51,39 @@ def get_word_data(db: Session, word: Word) -> tuple[list[str], list[AyahExample]
     return translations, examples
 
 
+def build_card_due(
+    db: Session,
+    user_id: int,
+    word: Word,
+    *,
+    easiness_factor: float,
+    interval: int,
+    repetitions: int,
+    next_review_date,
+    is_new: bool,
+) -> CardDue:
+    """Собрать CardDue с переводами, примерами и данными кластера."""
+    translations, examples = get_word_data(db, word)
+    known_root_data = get_known_root_words(db, user_id, word.root_approx, word.id)
+    known_root_words = [KnownRootWord(**d) for d in known_root_data]
+
+    return CardDue(
+        word_id=word.id,
+        arabic=word.arabic,
+        arabic_clean=word.arabic_clean,
+        translations=translations,
+        frequency=word.frequency,
+        easiness_factor=easiness_factor,
+        interval=interval,
+        repetitions=repetitions,
+        next_review_date=next_review_date,
+        is_new=is_new,
+        examples=examples,
+        root_approx=word.root_approx,
+        known_root_words=known_root_words,
+    )
+
+
 # Начальные SM-2 параметры для новых карточек
 DEFAULT_EF = 2.5
 DEFAULT_INTERVAL = 0
@@ -59,11 +93,13 @@ DEFAULT_REPETITIONS = 0
 @router.get("/due", response_model=list[CardDue])
 def get_due_cards(
     limit: int = Query(default=20, ge=1, le=100),
+    surah_number: Optional[int] = Query(default=None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
     Получить карточки для повторения сегодня.
+    Если surah_number задан — только слова из этой суры.
 
     Логика:
     1. Карточки с existing progress где next_review_date <= today
@@ -72,69 +108,79 @@ def get_due_cards(
     """
     today = date.today()
 
-    # Карточки с прогрессом, где пора повторять
-    due_progresses = (
-        db.query(UserCardProgress)
-        .filter(
-            UserCardProgress.user_id == current_user.id,
-            UserCardProgress.next_review_date <= today,
+    # Если фильтр по суре — собрать word_ids из этой суры
+    surah_word_ids: Optional[set[int]] = None
+    if surah_number is not None:
+        rows = (
+            db.query(WordOccurrence.word_id)
+            .join(Ayah, WordOccurrence.ayah_id == Ayah.id)
+            .filter(Ayah.surah_number == surah_number)
+            .distinct()
+            .all()
         )
-        .order_by(UserCardProgress.next_review_date)
+        surah_word_ids = {r[0] for r in rows}
+
+    # Карточки с прогрессом, где пора повторять
+    due_query = db.query(UserCardProgress).filter(
+        UserCardProgress.user_id == current_user.id,
+        UserCardProgress.next_review_date <= today,
+    )
+    if surah_word_ids is not None:
+        due_query = due_query.filter(UserCardProgress.word_id.in_(surah_word_ids))
+
+    due_progresses = (
+        due_query.order_by(UserCardProgress.next_review_date)
         .limit(limit)
         .all()
     )
 
     result = []
 
-    # Добавить карточки с прогрессом
+    # Добавить карточки с прогрессом (просроченные) — порядок не меняем
     for progress in due_progresses:
         word = db.query(Word).filter(Word.id == progress.word_id).first()
         if word:
-            translations, examples = get_word_data(db, word)
-            result.append(CardDue(
-                word_id=word.id,
-                arabic=word.arabic,
-                arabic_clean=word.arabic_clean,
-                translations=translations,
-                frequency=word.frequency,
+            result.append(build_card_due(
+                db, current_user.id, word,
                 easiness_factor=progress.easiness_factor,
                 interval=progress.interval,
                 repetitions=progress.repetitions,
                 next_review_date=progress.next_review_date,
                 is_new=False,
-                examples=examples,
             ))
 
     # Если нужно больше — добавить новые слова (без прогресса)
     remaining = limit - len(result)
     if remaining > 0:
-        # Слова у которых НЕТ прогресса для этого пользователя
         studied_word_ids = (
             db.query(UserCardProgress.word_id)
             .filter(UserCardProgress.user_id == current_user.id)
             .subquery()
         )
-        new_words = (
-            db.query(Word)
-            .filter(Word.id.not_in(studied_word_ids))
-            .order_by(Word.frequency.desc())  # Начинаем с самых частых слов
-            .limit(remaining)
-            .all()
-        )
-        for word in new_words:
-            translations, examples = get_word_data(db, word)
-            result.append(CardDue(
-                word_id=word.id,
-                arabic=word.arabic,
-                arabic_clean=word.arabic_clean,
-                translations=translations,
-                frequency=word.frequency,
+        new_words_query = db.query(Word).filter(Word.id.not_in(studied_word_ids))
+        if surah_word_ids is not None:
+            new_words_query = new_words_query.filter(Word.id.in_(surah_word_ids))
+
+        # Берём кандидатов с запасом для scoring (×3), чтобы после сортировки
+        # выбрать лучшие remaining слов
+        candidates = new_words_query.limit(remaining * 3).all()
+
+        # Вариант 1: ML / fallback скоринг
+        scored = score_new_words(db, current_user.id, candidates)
+        scored.sort(key=lambda x: x[1], reverse=True)
+        top_words = [w for w, _ in scored[:remaining]]
+
+        # Вариант 2: кластеризация по корню
+        clustered_words = cluster_by_root(top_words)
+
+        for word in clustered_words:
+            result.append(build_card_due(
+                db, current_user.id, word,
                 easiness_factor=DEFAULT_EF,
                 interval=DEFAULT_INTERVAL,
                 repetitions=DEFAULT_REPETITIONS,
                 next_review_date=today,
                 is_new=True,
-                examples=examples,
             ))
 
     return result

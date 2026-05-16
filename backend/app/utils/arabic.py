@@ -45,3 +45,21 @@ def extract_words(arabic_text: str) -> list[str]:
     # Убрать слова-знаки препинания (если есть)
     words = [w for w in words if any('\u0600' <= c <= '\u06FF' for c in w)]
     return words
+
+
+# Слабые буквы и незначащие символы арабского — не входят в корень
+_WEAK_LETTERS = set('اويءةأإآؤئ')
+
+
+def extract_root_approx(arabic_clean: str) -> str:
+    """
+    Приближённо извлечь трёхбуквенный корень из нормализованного арабского слова.
+
+    Метод: берём первые 3 согласные буквы, исключая слабые (ا و ي ء ة и варианты хамзы).
+    Точность ~70% для слов 30-го джуза — достаточно для группировки кластеров.
+
+    Returns:
+        Строка из 1–3 символов (может быть короче у очень коротких слов).
+    """
+    consonants = [c for c in arabic_clean if c not in _WEAK_LETTERS]
+    return ''.join(consonants[:3])

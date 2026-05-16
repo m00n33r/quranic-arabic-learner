@@ -19,6 +19,88 @@ router = APIRouter(prefix="/reader", tags=["reader"])
 
 DEFAULT_EF = 2.5
 
+# Русские транслитерации названий сур 30-го джуза (78–114)
+SURAH_TRANSLITERATION_RU: dict[int, str] = {
+    78:  "Ан-Наба",
+    79:  "Ан-Назиат",
+    80:  "Абаса",
+    81:  "Ат-Таквир",
+    82:  "Аль-Инфитар",
+    83:  "Аль-Мутаффифин",
+    84:  "Аль-Иншикак",
+    85:  "Аль-Бурудж",
+    86:  "Ат-Тарик",
+    87:  "Аль-Аля",
+    88:  "Аль-Гашия",
+    89:  "Аль-Фаджр",
+    90:  "Аль-Баляд",
+    91:  "Аш-Шамс",
+    92:  "Аль-Лейль",
+    93:  "Ад-Духа",
+    94:  "Аш-Шарх",
+    95:  "Ат-Тин",
+    96:  "Аль-Аляк",
+    97:  "Аль-Кадр",
+    98:  "Аль-Баййина",
+    99:  "Аз-Зальзаля",
+    100: "Аль-Адиат",
+    101: "Аль-Кариа",
+    102: "Ат-Такасур",
+    103: "Аль-Аср",
+    104: "Аль-Хумаза",
+    105: "Аль-Филь",
+    106: "Курайш",
+    107: "Аль-Маун",
+    108: "Аль-Каусар",
+    109: "Аль-Кафирун",
+    110: "Ан-Наср",
+    111: "Аль-Масад",
+    112: "Аль-Ихляс",
+    113: "Аль-Фаляк",
+    114: "Ан-Нас",
+}
+
+# Русские названия сур 30-го джуза (78–114)
+SURAH_NAMES_RU: dict[int, str] = {
+    78:  "Весть",
+    79:  "Вырывающие",
+    80:  "Нахмурился",
+    81:  "Скручивание",
+    82:  "Разрывание",
+    83:  "Обвешивающие",
+    84:  "Разверзание",
+    85:  "Созвездия",
+    86:  "Ночной путник",
+    87:  "Всевышний",
+    88:  "Покрывающее",
+    89:  "Заря",
+    90:  "Город",
+    91:  "Солнце",
+    92:  "Ночь",
+    93:  "Утро",
+    94:  "Раскрытие",
+    95:  "Смоква",
+    96:  "Сгусток",
+    97:  "Предопределение",
+    98:  "Ясное знамение",
+    99:  "Землетрясение",
+    100: "Мчащиеся",
+    101: "Великое бедствие",
+    102: "Страсть к умножению",
+    103: "Послеполуденное время",
+    104: "Хулитель",
+    105: "Слон",
+    106: "Курейшиты",
+    107: "Мелкая помощь",
+    108: "Обильный",
+    109: "Неверующие",
+    110: "Помощь",
+    111: "Пальмовые волокна",
+    112: "Искренность",
+    113: "Рассвет",
+    114: "Люди",
+}
+
 
 @router.get("/surahs", response_model=list[SurahInfo])
 def get_surahs(
@@ -26,7 +108,14 @@ def get_surahs(
     current_user: User = Depends(get_current_user),
 ):
     """Список сур 30-го джуза."""
-    return db.query(Surah).order_by(Surah.number.asc()).all()
+    surahs = db.query(Surah).order_by(Surah.number.asc()).all()
+    result = []
+    for s in surahs:
+        info = SurahInfo.model_validate(s)
+        info.name_russian = SURAH_NAMES_RU.get(s.number)
+        info.name_transliteration_ru = SURAH_TRANSLITERATION_RU.get(s.number)
+        result.append(info)
+    return result
 
 
 @router.get("/ayahs/{surah_number}", response_model=list[AyahWithWords])
@@ -86,10 +175,16 @@ def get_ayahs(
             ayah_occs = occ_index.get(ayah.id, {})
             if pos in ayah_occs:
                 word_id, arabic = ayah_occs[pos]
+                word = words_map.get(word_id)
+                # Берём первое значение перевода (до ";")
+                translation_ru = None
+                if word and word.translation_ru:
+                    translation_ru = word.translation_ru.split(';')[0].strip() or None
                 words_in_ayah.append(WordInAyah(
                     word_id=word_id,
                     position=pos,
                     arabic=arabic,
+                    translation_ru=translation_ru,
                     is_in_study=word_id in studying_word_ids,
                 ))
             else:
@@ -97,6 +192,7 @@ def get_ayahs(
                     word_id=None,
                     position=pos,
                     arabic=token,
+                    translation_ru=None,
                     is_in_study=False,
                 ))
         result.append(AyahWithWords(

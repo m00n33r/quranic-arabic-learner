@@ -22,3 +22,10 @@ dist/
 
 # OS
 .DS_Store
+
+# Test databases
+*.db
+
+# Word documents
+*.docx
+~$*
